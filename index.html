@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPACE LAUNDRY - Pusat Kendali</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Space Grotesk', 'sans-serif'],
+                        mono: ['Space Mono', 'monospace'],
+                    },
+                    colors: {
+                        space: { 900: '#050510', 800: '#0b0b1f', 700: '#141432', 600: '#1e1e48' },
+                        neon: { blue: '#00f3ff', purple: '#9d00ff', pink: '#ff00c8', green: '#00ff9d' }
+                    },
+                    boxShadow: {
+                        'neon-blue': '0 0 15px rgba(0, 243, 255, 0.4)',
+                        'neon-purple': '0 0 15px rgba(157, 0, 255, 0.4)',
+                        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #050510; color: #ffffff; overflow-x: hidden; font-family: 'Space Grotesk', sans-serif; }
+
+        /* Animasi Bintang */
+        .stars-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; background: radial-gradient(ellipse at bottom, #1b2735 0%, #050510 100%); overflow: hidden; }
+        .stars { width: 2px; height: 2px; background: transparent; box-shadow: 174px 123px #FFF, 423px 456px #FFF, 734px 23px #FFF, 123px 654px #FFF, 543px 234px #FFF, 876px 543px #FFF, 234px 765px #FFF, 654px 876px #FFF, 987px 345px #FFF, 345px 987px #FFF, 765px 123px #FFF, 12px 34px #FFF; animation: animStar 50s linear infinite; }
+        .stars2 { width: 3px; height: 3px; background: transparent; box-shadow: 43px 543px #FFF, 543px 123px #FFF, 876px 654px #FFF, 234px 876px #FFF, 765px 234px #FFF, 123px 765px #FFF, 654px 123px #FFF, 987px 543px #FFF, 345px 987px #FFF, 876px 345px #FFF; animation: animStar 100s linear infinite; }
+        @keyframes animStar { from { transform: translateY(0px); } to { transform: translateY(-1000px); } }
+
+        /* Kaca (Glassmorphism) */
+        .glass-panel { background: rgba(11, 11, 31, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+
+        /* Transisi Halaman */
+        .page-section, .app-view { display: none; opacity: 0; transition: opacity 0.4s ease-in-out; }
+        .active-view { display: flex; opacity: 1; animation: fadeIn 0.5s forwards; }
+        .active-block { display: block; opacity: 1; animation: fadeIn 0.5s forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .float-anim { animation: float 6s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #050510; }
+        ::-webkit-scrollbar-thumb { background: #1e1e48; border-radius: 4px; }
+        
+        /* Format Cetak Printer Thermal 58mm */
+        @media print {
+            body * { visibility: hidden; }
+            body { background: white !important; color: black !important; }
+            .stars-container, #toast-container { display: none !important; }
+            
+            #print-area, #print-area * { visibility: visible; }
+            #print-area {
+                position: absolute; left: 0; top: 0;
+                width: 58mm; /* Lebar thermal standar */
+                padding: 0; margin: 0;
+                font-family: 'Space Mono', monospace; color: black; background: white;
+            }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen relative text-sm md:text-base">
+
+    <div class="stars-container no-print">
+        <div class="stars"></div><div class="stars2"></div>
+    </div>
+
+    <!-- Container Toast Notifikasi -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 no-print w-72 md:w-80 max-w-full px-4"></div>
+
+    <!-- ================= LANDING PAGE ================= -->
+    <div id="view-landing" class="page-section active-view flex-col items-center justify-center min-h-screen relative no-print">
+        <div class="absolute w-[300px] h-[300px] bg-neon-purple rounded-full blur-[100px] opacity-20 pointer-events-none"></div>
+        
+        <div class="z-10 text-center px-4 max-w-4xl">
+            <div class="float-anim inline-block mb-6 relative">
+                <div class="absolute inset-0 bg-neon-blue rounded-full blur-xl opacity-50"></div>
+                <div class="relative w-28 h-28 rounded-full glass-panel flex items-center justify-center border-2 border-neon-blue">
+                    <i class="fas fa-meteor text-5xl text-transparent bg-clip-text bg-gradient-to-br from-neon-blue to-neon-purple"></i>
+                </div>
+            </div>
+            <h1 class="text-4xl md:text-6xl font-bold mb-4 tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-white to-neon-purple drop-shadow-lg">SPACE LAUNDRY</h1>
+            <p class="text-lg md:text-xl text-gray-300 mb-10 font-light">Sistem Perawatan Pakaian Antargalaksi</p>
+            <button onclick="navigate('login')" class="relative overflow-hidden group px-8 py-3 rounded-full bg-space-800 border border-neon-blue text-neon-blue font-bold text-lg transition-all duration-300 hover:shadow-neon-blue hover:bg-neon-blue hover:text-space-900">
+                <span class="relative z-10 flex items-center gap-2">Masuk ke Sistem <i class="fas fa-rocket group-hover:translate-x-1 transition-transform"></i></span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= LOGIN PAGE ================= -->
+    <div id="view-login" class="page-section flex-col items-center justify-center min-h-screen px-4 no-print relative">
+        <div class="glass-panel p-8 rounded-3xl w-full max-w-sm shadow-glass z-10 text-center">
+            <i class="fas fa-user-astronaut text-4xl text-neon-blue mb-4"></i>
+            <h2 class="text-2xl font-bold text-white mb-6">Otorisasi Akses</h2>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-4 relative">
+                    <i class="fas fa-user absolute left-4 top-3.5 text-gray-500"></i>
+                    <!-- Value dan placeholder disamarkan, tidak ada bocoran kredensial -->
+                    <input type="text" id="login-id" class="w-full bg-space-900 border border-space-600 text-white rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-neon-blue" placeholder="Username" autocomplete="off">
+                </div>
+                <div class="mb-8 relative">
+                    <i class="fas fa-lock absolute left-4 top-3.5 text-gray-500"></i>
+                    <!-- Value dan placeholder disamarkan -->
+                    <input type="password" id="login-pass" class="w-full bg-space-900 border border-space-600 text-white rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-neon-blue" placeholder="Password">
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-neon-blue to-neon-purple text-white font-bold py-3 px-4 rounded-xl shadow-neon-blue hover:opacity-90 transition-all">LOGIN</button>
+            </form>
+            <button onclick="navigate('landing')" class="w-full text-center mt-6 text-gray-500 hover:text-neon-pink text-sm">Kembali ke Beranda</button>
+        </div>
+    </div>
+
+    <!-- ================= APP SHELL ================= -->
+    <div id="view-app" class="page-section h-screen w-full no-print">
+        
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 glass-panel border-r border-space-600 flex flex-col transition-transform duration-300 fixed md:relative z-40 h-full -translate-x-full md:translate-x-0">
+            <div class="p-5 border-b border-space-600 flex justify-between items-center bg-space-800/80">
+                <div class="font-bold text-white flex items-center gap-2"><i class="fas fa-meteor text-neon-blue"></i> SPACE LAUNDRY</div>
+                <button class="md:hidden text-gray-400" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+            </div>
+            <nav class="flex-1 px-3 py-4 space-y-2 overflow-y-auto">
+                <button onclick="navigateMenu('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-left rounded-xl transition-all text-gray-400"><i class="fas fa-chart-pie w-5 text-neon-blue"></i> <span class="font-medium">Dashboard</span></button>
+                <button onclick="navigateMenu('order')" id="nav-order" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-left rounded-xl transition-all text-gray-400"><i class="fas fa-plus-circle w-5 text-neon-purple"></i> <span class="font-medium">Order Baru</span></button>
+                <button onclick="navigateMenu('checkout')" id="nav-checkout" class="nav-btn w-full flex items-center gap-3 px-4 py-3 text-left rounded-xl transition-all text-gray-400 relative">
+                    <i class="fas fa-shopping-cart w-5 text-neon-pink"></i> <span class="font-medium">Checkout</span>
+                    <span id="cart-badge" class="absolute right-3 bg-neon-pink text-white text-[10px] font-bold px-2 py-0.5 rounded-full hidden">0</span>
+                </button>
+            </nav>
+            <div class="p-4 border-t border-space-600">
+                <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors text-sm border border-red-500/20"><i class="fas fa-power-off"></i> Logout</button>
+            </div>
+        </aside>
+
+        <!-- Overlay Mobile Sidebar -->
+        <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/80 z-30 hidden md:hidden"></div>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+            <header class="md:hidden glass-panel p-4 flex items-center justify-between z-20 border-b border-space-600">
+                <div class="font-bold text-white flex items-center gap-2"><i class="fas fa-meteor text-neon-blue"></i> SPACE LAUNDRY</div>
+                <button onclick="toggleSidebar()" class="text-white"><i class="fas fa-bars text-xl"></i></button>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-4 md:p-6">
+                <div class="max-w-5xl mx-auto">
+                    
+                    <!-- VIEW: DASHBOARD -->
+                    <div id="app-dashboard" class="app-view active-block">
+                        <h2 class="text-2xl font-bold text-white mb-6">Status Operasional</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div class="glass-panel p-5 rounded-xl border border-neon-blue/30 flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-lg bg-space-900 border border-neon-blue flex items-center justify-center text-neon-blue"><i class="fas fa-receipt text-xl"></i></div>
+                                <div><p class="text-gray-400 text-sm">Pesanan Hari Ini</p><h3 class="text-2xl font-bold text-white" id="stat-orders">0</h3></div>
+                            </div>
+                            <div class="glass-panel p-5 rounded-xl border border-neon-purple/30 flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-lg bg-space-900 border border-neon-purple flex items-center justify-center text-neon-purple"><i class="fas fa-wallet text-xl"></i></div>
+                                <div><p class="text-gray-400 text-sm">Pendapatan Hari Ini</p><h3 class="text-2xl font-bold text-white" id="stat-revenue">Rp 0</h3></div>
+                            </div>
+                        </div>
+                        <div class="glass-panel rounded-xl p-5 border border-space-600">
+                            <h3 class="font-bold text-white mb-4">Aktivitas Terakhir</h3>
+                            <p class="text-gray-500 text-sm italic" id="empty-activity">Belum ada aktivitas pesanan hari ini.</p>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm whitespace-nowrap hidden" id="activity-table">
+                                    <thead class="text-gray-400 border-b border-space-600"><tr><th class="pb-2 px-2">ID Transaksi</th><th class="pb-2 px-2">Pelanggan</th><th class="pb-2 px-2 text-right">Total</th></tr></thead>
+                                    <tbody id="activity-body" class="text-gray-300"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VIEW: ORDER -->
+                    <div id="app-order" class="app-view">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold text-white">Layanan</h2>
+                            <button onclick="navigateMenu('checkout')" class="bg-space-800 text-neon-pink border border-neon-pink px-4 py-1.5 rounded-lg hover:bg-neon-pink hover:text-white transition-colors text-sm flex items-center gap-2"><i class="fas fa-shopping-cart"></i> Lihat Cart</button>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="services-grid">
+                            <!-- Di-generate via JS -->
+                        </div>
+                    </div>
+
+                    <!-- VIEW: CHECKOUT -->
+                    <div id="app-checkout" class="app-view">
+                        <h2 class="text-2xl font-bold text-white mb-6">Checkout</h2>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="lg:col-span-2 glass-panel rounded-xl border border-space-600 overflow-hidden h-fit">
+                                <div class="p-4 border-b border-space-600 bg-space-800 flex justify-between items-center">
+                                    <h3 class="font-bold text-white">Keranjang Pesanan</h3>
+                                    <button onclick="clearCart()" class="text-xs text-red-400 hover:text-red-300"><i class="fas fa-trash"></i> Kosongkan</button>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left text-sm whitespace-nowrap">
+                                        <thead class="bg-space-900 text-gray-400"><tr><th class="p-3">Layanan</th><th class="p-3 text-center">Qty</th><th class="p-3 text-right">Subtotal</th><th class="p-3 text-center">Hapus</th></tr></thead>
+                                        <tbody id="cart-table-body" class="divide-y divide-space-600"></tbody>
+                                    </table>
+                                </div>
+                                <div id="cart-empty" class="p-8 text-center text-gray-500 hidden text-sm">Keranjang masih kosong.</div>
+                            </div>
+                            <div class="lg:col-span-1 glass-panel rounded-xl border border-space-600 p-5 h-fit">
+                                <h3 class="font-bold text-white mb-4 border-b border-space-600 pb-2">Detail Pelanggan</h3>
+                                <div class="mb-5 space-y-3">
+                                    <input type="text" id="cust-name" class="w-full bg-space-900 border border-space-600 rounded-lg px-3 py-2 text-white text-sm focus:border-neon-blue focus:outline-none" placeholder="Nama Pelanggan" autocomplete="off">
+                                </div>
+                                <div class="border-t border-space-600 pt-3 mb-5">
+                                    <div class="flex justify-between text-gray-400 text-sm mb-1"><span>Total Item:</span><span id="summary-items" class="text-white">0</span></div>
+                                    <div class="flex justify-between text-lg font-bold mt-2"><span class="text-white">Total:</span><span id="summary-total" class="text-neon-blue">Rp 0</span></div>
+                                </div>
+                                <button onclick="processOrder()" class="w-full bg-gradient-to-r from-neon-blue to-neon-purple text-space-900 font-bold py-3 px-4 rounded-xl shadow-neon-blue hover:shadow-neon-purple transition-all flex items-center justify-center gap-2">
+                                    Proses Pesanan <i class="fas fa-check-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VIEW: PRINT PREVIEW -->
+                    <div id="app-print" class="app-view">
+                        <div class="flex items-center gap-4 mb-6">
+                            <button onclick="navigateMenu('dashboard')" class="text-gray-400 hover:text-white"><i class="fas fa-arrow-left"></i> Kembali</button>
+                            <h2 class="text-2xl font-bold text-white">Nota Pembayaran</h2>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                            <!-- Visual Receipt -->
+                            <div class="glass-panel p-6 rounded-xl border border-space-600 flex justify-center bg-white text-black font-mono shadow-glass">
+                                <div class="w-[300px] border border-gray-300 p-4 bg-white" id="receipt-preview">
+                                    <!-- Diisi via JS untuk preview UI -->
+                                </div>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="space-y-4">
+                                <div class="glass-panel p-5 rounded-xl border border-space-600">
+                                    <h3 class="font-bold text-white mb-2">Opsi Pencetakan</h3>
+                                    <p class="text-gray-400 text-sm mb-4">Pilih metode cetak yang sesuai dengan perangkat Anda.</p>
+                                    
+                                    <button onclick="printStandard()" class="w-full mb-3 bg-space-700 text-white font-medium py-3 px-4 rounded-lg border border-space-500 hover:bg-space-600 transition-all flex items-center justify-center gap-3">
+                                        <i class="fas fa-print text-neon-blue"></i> Print Standar (Browser)
+                                    </button>
+                                    <button onclick="printBluetooth()" class="w-full bg-space-800 text-white font-medium py-3 px-4 rounded-lg border border-space-500 hover:bg-space-700 transition-all flex items-center justify-center gap-3 border-neon-purple">
+                                        <i class="fab fa-bluetooth-b text-neon-purple"></i> Print Bluetooth (Thermal)
+                                    </button>
+                                </div>
+                                <div class="glass-panel p-4 rounded-xl border border-yellow-500/30 bg-yellow-900/10">
+                                    <p class="text-xs text-gray-300 leading-relaxed"><i class="fas fa-info-circle text-yellow-500 mr-1"></i> <strong>Cetak Standar</strong> menggunakan dialog print browser (sesuaikan ukuran kertas). <strong>Cetak Bluetooth</strong> membutuhkan Web Bluetooth API (Chrome/Edge via HTTPS/localhost) dan menyambung langsung ke printer thermal.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ================= HIDDEN PRINT AREA (58mm Thermal format) ================= -->
+    <div id="print-area" class="hidden">
+        <div style="text-align: center; border-bottom: 1px dashed black; padding-bottom: 5px; margin-bottom: 5px;">
+            <h2 style="margin: 0; font-size: 16px; font-weight: bold;">SPACE LAUNDRY</h2>
+            <p style="margin: 2px 0; font-size: 10px; line-height: 1.2;">
+                Mojoagung RT 6 RW 1, Kecamatan Trangkil, Kabupaten Pati<br>
+                No Telp: 085225426169
+            </p>
+        </div>
+        <div style="font-size: 10px; margin-bottom: 5px; border-bottom: 1px dashed black; padding-bottom: 5px; text-align: left;">
+            Tgl : <span id="p-date"></span><br>
+            Nota: <span id="p-id"></span><br>
+            Nama: <strong id="p-name"></strong>
+        </div>
+        <table style="width: 100%; font-size: 10px; margin-bottom: 5px; text-align: left;" id="p-table">
+            <thead style="border-bottom: 1px dashed black;">
+                <tr><th>Item</th><th style="text-align: center;">Qty</th><th style="text-align: right;">Total</th></tr>
+            </thead>
+            <tbody id="p-items"></tbody>
+        </table>
+        <div style="border-top: 1px dashed black; padding-top: 5px; font-size: 11px; font-weight: bold; text-align: right; margin-bottom: 10px;">
+            TOTAL: <span id="p-total"></span>
+        </div>
+        <div style="text-align: center; font-size: 10px;">
+            <p style="margin: 2px 0;">Terima Kasih</p>
+            <p style="margin: 2px 0; border-top: 1px solid black; display: inline-block; padding-top: 2px;">Owner: Marta Edhy</p>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA & STATE ---
+        const services = [
+            { id: 'S01', name: 'Cuci Kering (CK)', price: 4000, unit: 'kg', icon: 'fa-tshirt' },
+            { id: 'S02', name: 'Cuci Kering Setrika (CKS)', price: 6000, unit: 'kg', icon: 'fa-soap' },
+            { id: 'S03', name: 'Setrika', price: 4000, unit: 'kg', icon: 'fa-burn' },
+            { id: 'S04', name: 'Satuan/Bijian', price: 2000, unit: 'pcs', icon: 'fa-socks' },
+            { id: 'S05', name: 'Bedcover', price: 25000, unit: 'pcs', icon: 'fa-bed' },
+            { id: 'S06', name: 'Sprei', price: 10000, unit: 'pcs', icon: 'fa-scroll' },
+            { id: 'S07', name: 'Jas', price: 20000, unit: 'pcs', icon: 'fa-user-tie' },
+            { id: 'S08', name: 'Sepatu', price: 25000, unit: 'psg', icon: 'fa-shoe-prints' },
+            { id: 'S09', name: 'Karpet', price: 15000, unit: 'mtr', icon: 'fa-map' },
+        ];
+
+        let cart = [];
+        let stats = { orders: 0, revenue: 0 };
+        let history = [];
+        let currentTransaction = null; // Menyimpan transaksi terakhir untuk dicetak
+
+        // --- UTILS ---
+        const formatRp = (num) => 'Rp ' + num.toLocaleString('id-ID');
+        const generateId = () => 'TRX-' + Math.floor(1000 + Math.random() * 9000);
+        
+        // Custom Toast Notification
+        const showToast = (msg, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bg = type === 'error' ? 'bg-red-900/90 border-red-500' : (type === 'warning' ? 'bg-yellow-900/90 border-yellow-500' : 'bg-space-800/90 border-neon-blue');
+            const icon = type === 'error' ? 'fa-exclamation-triangle text-red-500' : (type === 'warning' ? 'fa-info-circle text-yellow-500' : 'fa-check-circle text-neon-blue');
+            
+            toast.className = `flex items-center gap-3 p-4 rounded-xl border backdrop-blur-md shadow-glass transform transition-all duration-300 translate-x-full opacity-0 ${bg}`;
+            toast.innerHTML = `<i class="fas ${icon} text-lg"></i> <span class="text-sm font-medium text-white">${msg}</span>`;
+            container.appendChild(toast);
+            
+            requestAnimationFrame(() => toast.classList.remove('translate-x-full', 'opacity-0'));
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-full');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+
+        // --- NAVIGATION & AUTH ---
+        const navigate = (page) => {
+            document.querySelectorAll('.page-section').forEach(el => { el.classList.remove('active-view', 'active-block'); el.classList.add('hidden'); });
+            const target = document.getElementById(`view-${page}`);
+            target.classList.remove('hidden');
+            
+            if (page === 'app') { 
+                target.classList.add('active-view'); 
+                navigateMenu('dashboard'); 
+                renderServices(); 
+            } else { 
+                target.classList.add('active-view'); 
+            }
+        };
+
+        const navigateMenu = (menu) => {
+            document.querySelectorAll('.app-view').forEach(el => { el.classList.add('hidden'); el.classList.remove('active-block'); });
+            const view = document.getElementById(`app-${menu}`);
+            view.classList.remove('hidden'); view.classList.add('active-block');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-space-700', 'text-white', 'shadow-neon-blue', 'border', 'border-neon-blue/30');
+                btn.classList.add('text-gray-400');
+            });
+            const btn = document.getElementById(`nav-${menu}`);
+            if(btn) {
+                btn.classList.remove('text-gray-400');
+                btn.classList.add('bg-space-700', 'text-white', 'shadow-neon-blue', 'border', 'border-neon-blue/30');
+            }
+            if (window.innerWidth < 768) {
+                const sidebar = document.getElementById('sidebar');
+                if (!sidebar.classList.contains('-translate-x-full')) toggleSidebar();
+            }
+        };
+
+        const toggleSidebar = () => {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+            document.getElementById('sidebar-overlay').classList.toggle('hidden');
+        };
+
+        const handleLogin = (e) => {
+            e.preventDefault();
+            const id = document.getElementById('login-id').value;
+            const pass = document.getElementById('login-pass').value;
+
+            // Kredensial hardcode sesuai permintaan
+            if (id === 'martaedi' && pass === 'admin123') {
+                document.getElementById('loginForm').reset();
+                showToast('Akses Diterima. Selamat datang, Marta Edhy!');
+                setTimeout(() => navigate('app'), 600);
+            } else {
+                showToast('Kredensial tidak valid!', 'error');
+            }
+        };
+
+        const handleLogout = () => { 
+            showToast('Logout berhasil. Mengakhiri sesi.'); 
+            setTimeout(() => navigate('landing'), 500); 
+        };
+
+        // --- ORDER & CART LOGIC ---
+        const renderServices = () => {
+            const grid = document.getElementById('services-grid');
+            grid.innerHTML = '';
+            const colors = ['text-blue-400', 'text-indigo-400', 'text-orange-400', 'text-yellow-400', 'text-purple-400', 'text-pink-400', 'text-gray-300', 'text-red-400', 'text-green-400'];
+            
+            services.forEach((srv, i) => {
+                const step = (srv.unit === 'pcs' || srv.unit === 'psg') ? '1' : '0.1';
+                grid.innerHTML += `
+                    <div class="glass-panel p-4 rounded-xl border border-space-600 flex flex-col justify-between hover:border-neon-blue/50 transition-colors">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 rounded-lg bg-space-800 flex items-center justify-center shrink-0 border border-space-600"><i class="fas ${srv.icon} text-2xl ${colors[i%colors.length]}"></i></div>
+                            <div>
+                                <h3 class="text-white font-bold text-sm leading-tight">${srv.name}</h3>
+                                <p class="text-neon-blue text-xs font-mono mt-1">${formatRp(srv.price)}/${srv.unit}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 mt-auto">
+                            <input type="number" id="qty-${srv.id}" min="0.1" step="${step}" class="w-20 bg-space-900 border border-space-600 rounded-lg px-2 py-2 text-white text-sm text-center focus:outline-none focus:border-neon-purple" placeholder="Jml">
+                            <button onclick="addToCart('${srv.id}')" class="flex-1 bg-space-700 hover:bg-neon-blue hover:text-space-900 text-white font-medium rounded-lg text-sm transition-colors py-2"><i class="fas fa-plus"></i> Tambah</button>
+                        </div>
+                    </div>
+                `;
+            });
+        };
+
+        const addToCart = (id) => {
+            const srv = services.find(s => s.id === id);
+            const input = document.getElementById(`qty-${id}`);
+            let qty = parseFloat(input.value);
+
+            if (isNaN(qty) || qty <= 0) return showToast('Jumlah tidak valid!', 'error');
+            if ((srv.unit === 'pcs' || srv.unit === 'psg') && !Number.isInteger(qty)) return showToast(`${srv.unit} harus bilangan bulat!`, 'error');
+
+            const subtotal = qty * srv.price;
+            const existing = cart.find(item => item.id === id);
+            
+            if (existing) { existing.qty += qty; existing.subtotal += subtotal; } 
+            else { cart.push({ ...srv, qty, subtotal }); }
+
+            input.value = '';
+            showToast(`${srv.name} ditambahkan.`);
+            updateCartUI();
+        };
+
+        const removeFromCart = (idx) => { cart.splice(idx, 1); updateCartUI(); };
+        const clearCart = () => { if(cart.length) { cart = []; updateCartUI(); showToast('Keranjang dikosongkan.'); }};
+
+        const updateCartUI = () => {
+            const tbody = document.getElementById('cart-table-body');
+            const emptyState = document.getElementById('cart-empty');
+            const badge = document.getElementById('cart-badge');
+            
+            tbody.innerHTML = '';
+            let totalQty = 0, grandTotal = 0;
+
+            if (cart.length === 0) {
+                tbody.parentElement.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                badge.classList.add('hidden');
+            } else {
+                tbody.parentElement.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                badge.classList.remove('hidden');
+                badge.innerText = cart.length;
+
+                cart.forEach((item, idx) => {
+                    totalQty += item.qty; grandTotal += item.subtotal;
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-space-800/50 transition-colors">
+                            <td class="p-3"><p class="text-white font-medium text-sm">${item.name}</p><p class="text-[10px] text-gray-500">${formatRp(item.price)}/${item.unit}</p></td>
+                            <td class="p-3 text-center"><span class="bg-space-900 px-2 py-1 rounded text-neon-blue font-mono text-xs border border-space-600">${item.qty} ${item.unit}</span></td>
+                            <td class="p-3 text-right text-white font-medium text-sm">${formatRp(item.subtotal)}</td>
+                            <td class="p-3 text-center"><button onclick="removeFromCart(${idx})" class="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-400/10"><i class="fas fa-trash"></i></button></td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById('summary-items').innerText = `${cart.length} Jenis (${totalQty} Qty)`;
+            document.getElementById('summary-total').innerText = formatRp(grandTotal);
+        };
+
+        const processOrder = () => {
+            if (cart.length === 0) return showToast('Keranjang kosong!', 'error');
+            
+            const nameInput = document.getElementById('cust-name').value.trim();
+            if (!nameInput) { document.getElementById('cust-name').focus(); return showToast('Nama pelanggan wajib diisi!', 'error'); }
+
+            const grandTotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
+            const tId = generateId();
+            const dateStr = new Date().toLocaleString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+            // Simpan ke state
+            currentTransaction = { id: tId, name: nameInput, date: dateStr, items: [...cart], total: grandTotal };
+            
+            // Update Dashboard Stats
+            stats.orders++;
+            stats.revenue += grandTotal;
+            history.unshift({ id: tId, name: nameInput, total: grandTotal });
+            updateDashboard();
+
+            // Setup Print UI
+            setupPrintPreview(currentTransaction);
+
+            // Reset Form & pindah ke halaman Print
+            document.getElementById('cust-name').value = '';
+            cart = [];
+            updateCartUI();
+            navigateMenu('print');
+            showToast('Pesanan berhasil diproses!');
+        };
+
+        const updateDashboard = () => {
+            document.getElementById('stat-orders').innerText = stats.orders;
+            document.getElementById('stat-revenue').innerText = formatRp(stats.revenue);
+            
+            const tbody = document.getElementById('activity-body');
+            const table = document.getElementById('activity-table');
+            const empty = document.getElementById('empty-activity');
+
+            if (history.length > 0) {
+                empty.classList.add('hidden');
+                table.classList.remove('hidden');
+                tbody.innerHTML = '';
+                history.slice(0, 5).forEach(h => {
+                    tbody.innerHTML += `<tr class="border-b border-space-600/30 hover:bg-space-800/50"><td class="py-3 px-2 font-mono text-neon-blue text-xs">${h.id}</td><td class="py-3 px-2 text-white">${h.name}</td><td class="py-3 px-2 text-right font-medium text-white">${formatRp(h.total)}</td></tr>`;
+                });
+            }
+        };
+
+        const setupPrintPreview = (trx) => {
+            // Setup Visual Preview di UI
+            let itemsHtml = trx.items.map(i => `
+                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:2px;">
+                    <span style="flex:2">${i.name}</span>
+                    <span style="flex:1; text-align:center;">${i.qty}</span>
+                    <span style="flex:1; text-align:right;">${i.subtotal.toLocaleString('id-ID')}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('receipt-preview').innerHTML = `
+                <div style="text-align: center; border-bottom: 1px dashed #ccc; padding-bottom: 10px; margin-bottom: 10px;">
+                    <h2 style="margin: 0; font-size: 16px; font-weight: bold;">SPACE LAUNDRY</h2>
+                    <p style="margin: 4px 0; font-size: 10px; color: #555;">Mojoagung RT 6 RW 1, Kec. Trangkil, Kab. Pati<br>Telp: 085225426169</p>
+                </div>
+                <div style="font-size: 11px; margin-bottom: 10px; border-bottom: 1px dashed #ccc; padding-bottom: 10px;">
+                    <div style="display:flex; justify-content:space-between;"><span>Tgl:</span><span>${trx.date}</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Nota:</span><span>${trx.id}</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Nama:</span><strong>${trx.name}</strong></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:bold; border-bottom:1px solid #ddd; margin-bottom:5px;">
+                    <span style="flex:2">Item</span><span style="flex:1; text-align:center;">Qty</span><span style="flex:1; text-align:right;">Total</span>
+                </div>
+                ${itemsHtml}
+                <div style="border-top: 1px dashed #ccc; padding-top: 8px; margin-top: 8px; font-size: 14px; font-weight: bold; display:flex; justify-content:space-between;">
+                    <span>TOTAL:</span><span>${formatRp(trx.total)}</span>
+                </div>
+                <div style="text-align: center; font-size: 11px; margin-top:15px;">
+                    <p style="margin: 2px 0;">Terima Kasih</p>
+                    <p style="margin: 2px 0;">Owner: Marta Edhy</p>
+                </div>
+            `;
+
+            // Setup Hidden Print Area untuk window.print()
+            document.getElementById('p-date').innerText = trx.date;
+            document.getElementById('p-id').innerText = trx.id;
+            document.getElementById('p-name').innerText = trx.name;
+            const pItems = document.getElementById('p-items');
+            pItems.innerHTML = '';
+            trx.items.forEach(i => {
+                pItems.innerHTML += `<tr><td style="padding: 2px 0;">${i.name}</td><td style="text-align: center;">${i.qty}</td><td style="text-align: right;">${i.subtotal.toLocaleString('id-ID')}</td></tr>`;
+            });
+            document.getElementById('p-total').innerText = formatRp(trx.total);
+        };
+
+        // --- PRINTING METHODS ---
+        const printStandard = () => {
+            if (!currentTransaction) return showToast('Tidak ada data transaksi', 'error');
+            const area = document.getElementById('print-area');
+            area.classList.remove('hidden'); 
+            area.classList.add('block');
+            
+            // Jeda sebentar agar DOM hidden ter-render
+            setTimeout(() => {
+                window.print();
+                // Kembalikan ke hidden setelah dialog print tertutup
+                setTimeout(() => { area.classList.remove('block'); area.classList.add('hidden'); }, 500);
+            }, 200);
+        };
+
+        const printBluetooth = async () => {
+            if (!currentTransaction) return showToast('Tidak ada data transaksi', 'error');
+            
+            if (!navigator.bluetooth) {
+                return showToast("Web Bluetooth tidak didukung. Gunakan Chrome/Edge dan pastikan HTTPS.", 'warning');
+            }
+
+            // ESC/POS Generator Sederhana
+            const encoder = new TextEncoder();
+            let escpos = [];
+            const add = (arr) => escpos = escpos.concat(Array.from(arr));
+            const addText = (text) => add(encoder.encode(text));
+            const init = () => add([0x1B, 0x40]);
+            const alignCenter = () => add([0x1B, 0x61, 0x01]);
+            const alignLeft = () => add([0x1B, 0x61, 0x00]);
+            const boldOn = () => add([0x1B, 0x45, 0x01]);
+            const boldOff = () => add([0x1B, 0x45, 0x00]);
+            const feed = (lines = 1) => { for(let i=0; i<lines; i++) add([0x0A]); };
+            const divider = () => addText("--------------------------------\n"); // 32 chars max (58mm)
+
+            // Menyusun Teks Struk
+            const trx = currentTransaction;
+            init();
+            alignCenter(); boldOn();
+            addText("SPACE LAUNDRY\n"); boldOff();
+            addText("Mojoagung RT 6 RW 1\nKec. Trangkil, Kab. Pati\nTelp: 085225426169\n");
+            divider();
+            
+            alignLeft();
+            addText(`Tgl : ${trx.date}\n`);
+            addText(`Nota: ${trx.id}\n`);
+            addText(`Nama: ${trx.name}\n`);
+            divider();
+
+            trx.items.forEach(item => {
+                addText(`${item.name}\n`);
+                let line2 = `  ${item.qty} ${item.unit} x ${item.price.toLocaleString('id-ID')}`;
+                let subStr = item.subtotal.toLocaleString('id-ID');
+                let spaces = 32 - line2.length - subStr.length;
+                addText(line2 + " ".repeat(spaces > 0 ? spaces : 1) + subStr + "\n");
+            });
+            
+            divider();
+            alignLeft(); boldOn();
+            let totStr = trx.total.toLocaleString('id-ID');
+            addText("TOTAL:" + " ".repeat(32 - 6 - totStr.length) + totStr + "\n");
+            boldOff();
+            divider();
+            
+            alignCenter();
+            addText("Terima Kasih\n");
+            addText("Owner: Marta Edhy\n");
+            feed(4); // Feed sebelum dipotong
+
+            const printData = new Uint8Array(escpos);
+
+            // Eksekusi Koneksi Bluetooth
+            try {
+                showToast('Mencari printer thermal bluetooth...', 'warning');
+                
+                // UUID standard thermal printer biasanya 18f0
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: ['000018f0-0000-1000-8000-00805f9b34fb'] }],
+                    optionalServices: ['e7810a71-73ae-499d-8c15-faa9aef0c3f2'] 
+                }).catch(err => {
+                    // Fallback jika tidak menemukan UUID diatas (Memaksa user memilih)
+                    return navigator.bluetooth.requestDevice({
+                        acceptAllDevices: true,
+                        optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb', 'e7810a71-73ae-499d-8c15-faa9aef0c3f2']
+                    });
+                });
+
+                showToast('Menghubungkan ke printer...', 'warning');
+                const server = await device.gatt.connect();
+                const services = await server.getPrimaryServices();
+                if(services.length === 0) throw new Error("Service printer tidak ditemukan.");
+                
+                const service = services[0]; 
+                const characteristics = await service.getCharacteristics();
+                const writeChar = characteristics.find(c => c.properties.write || c.properties.writeWithoutResponse);
+                
+                if (!writeChar) throw new Error("Printer tidak mendukung Write API.");
+
+                showToast('Mencetak struk...', 'warning');
+                
+                // Kirim data chunk by chunk (Limit BLE biasanya kecil)
+                const chunkSize = 100;
+                for (let i = 0; i < printData.length; i += chunkSize) {
+                    await writeChar.writeValue(printData.slice(i, i + chunkSize));
+                }
+
+                showToast('Berhasil dicetak via Bluetooth!');
+                device.gatt.disconnect();
+
+            } catch (err) {
+                console.error(err);
+                if (err.name === 'NotFoundError') {
+                    showToast('Pemilihan printer dibatalkan.', 'warning');
+                } else {
+                    showToast(`Gagal koneksi Bluetooth: ${err.message}`, 'error');
+                }
+            }
+        };
+    </script>
+</body>
+</html>
